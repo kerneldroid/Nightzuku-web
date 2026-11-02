@@ -28,10 +28,10 @@ Clicking another screenshot — or switching Phone / Wear OS / Android TV — re
 ## Performance notes
 
 - Theme quantization runs in a `requestIdleCallback`, off the first paint; the static palette is used until it lands.
-- ASCII decoding is capped at 30fps, uses precomputed per-cell noise and reuses colour strings; the canvas releases its backing store once the screenshot resolves.
-- `MorphShape` stops its spring loop when it leaves the viewport.
-- Only Doto 900 and Space Mono 400/700 are fetched; the hero screenshot is preconnected and preloaded.
-- The ambient layers avoid `filter: blur()` so scrolling stays on the compositor.
+- ASCII decoding uses precomputed per-cell noise and prebuilt colour strings (no per-glyph allocation), waits only for the Space Mono face, and releases the canvas backing store once the screenshot resolves.
+- `MorphShape` stops its spring loop when it leaves the viewport, and uses 128 path samples instead of 180.
+- The hero screenshot is preconnected and preloaded, and its decode starts immediately instead of waiting for it to scroll into view.
+- Ambient blur, backdrop filters, fonts and animation frame rates are untouched.
 
 ## Local development
 

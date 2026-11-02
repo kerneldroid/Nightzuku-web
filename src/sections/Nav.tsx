@@ -102,7 +102,7 @@ export function Nav() {
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ ...spring, delay: 0.3 }}
-        className="fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 mx-auto flex w-max max-w-[calc(100vw-1rem)] items-center gap-0.5 overflow-x-auto rounded-full border border-outline bg-surface-2/95 p-1.5 shadow-2xl shadow-black md:hidden"
+        className="fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-50 mx-auto flex w-max max-w-[calc(100vw-1rem)] items-center gap-0.5 overflow-x-auto rounded-full border border-outline bg-surface-2/90 p-1.5 shadow-2xl shadow-black backdrop-blur-md md:hidden"
       >
         <Pills active={active} id="nav-bottom" />
       </motion.nav>

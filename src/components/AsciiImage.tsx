@@ -134,8 +134,15 @@ export function AsciiImage({
     const cv = canvas.current;
     if (!el || !cv) return;
 
-    loadImage(src)
-      .then((img) => {
+    Promise.all([
+      loadImage(src),
+      // Wait only for the mono face the raster uses, never for the display fonts.
+      Promise.race([
+        document.fonts.load('700 16px "Space Mono"'),
+        new Promise<void>((resolve) => setTimeout(resolve, 500)),
+      ]),
+    ])
+      .then(([img]) => {
         if (cancelled) return;
         const W = el.clientWidth;
         const H = el.clientHeight;
@@ -176,17 +183,9 @@ export function AsciiImage({
         const noise = new Float32Array(nCols * nRows);
         for (let i = 0; i < noise.length; i++) noise[i] = Math.random();
 
-        // The decode is decorative: 30fps looks identical and halves fillText work.
-        const frameMs = 1000 / 30;
-        let last = 0;
         const start = performance.now();
         const draw = (now: number) => {
           if (cancelled) return;
-          if (now - last < frameMs) {
-            raf = requestAnimationFrame(draw);
-            return;
-          }
-          last = now;
           const p = Math.min(1, (now - start) / duration);
 
           ctx.clearRect(0, 0, W, H);

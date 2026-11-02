@@ -35,7 +35,7 @@ function Substrate() {
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       <div className="dot-grid absolute inset-0 opacity-40" />
       <div
-        className="absolute -top-[20%] -right-[15%] h-[70vh] w-[70vh] rounded-full"
+        className="absolute -top-[20%] -right-[15%] h-[70vh] w-[70vh] rounded-full blur-[10px]"
         style={{
           background:
             "radial-gradient(circle, color-mix(in srgb, var(--color-primary) 13%, transparent), transparent 62%)",
