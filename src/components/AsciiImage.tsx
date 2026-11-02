@@ -77,6 +77,8 @@ type Props = {
   duration?: number;
   /** bump this number to replay the decode at the same src */
   replayKey?: number;
+  /** decode on mount even if the host is just below the fold (hero visual) */
+  immediate?: boolean;
   onStatus?: (s: "loading" | "decoding" | "ready" | "error") => void;
 };
 
@@ -93,6 +95,7 @@ export function AsciiImage({
   fit = "cover",
   duration = 1000,
   replayKey = 0,
+  immediate = false,
   onStatus,
 }: Props) {
   const host = useRef<HTMLDivElement | null>(null);
@@ -113,7 +116,7 @@ export function AsciiImage({
   }, [busy, failed, onStatus]);
 
   useEffect(() => {
-    if (!inView) return;
+    if (!inView && !immediate) return;
     const runKey = `${src}::${replayKey}`;
     if (lastRun.current === runKey) return;
     const first = lastRun.current === null;
@@ -121,6 +124,7 @@ export function AsciiImage({
 
     let raf = 0;
     let cancelled = false;
+    let finished = false;
     setBusy(true);
     setFailed(false);
     setPrevious(first ? null : shown);
@@ -141,6 +145,7 @@ export function AsciiImage({
           cv.style.opacity = "0";
           if (nextImg.current) nextImg.current.style.opacity = "1";
           if (prevImg.current) prevImg.current.style.opacity = "0";
+          finished = true;
           setBusy(false);
           return;
         }
@@ -230,6 +235,7 @@ export function AsciiImage({
             cv.width = 1;
             cv.height = 1;
             if (nextImg.current) nextImg.current.style.opacity = "1";
+            finished = true;
             setBusy(false);
             setPrevious(null);
           }
@@ -238,6 +244,7 @@ export function AsciiImage({
       })
       .catch(() => {
         if (cancelled) return;
+        finished = true;
         setFailed(true);
         setBusy(false);
       });
@@ -245,9 +252,11 @@ export function AsciiImage({
     return () => {
       cancelled = true;
       cancelAnimationFrame(raf);
+      // A cancelled run (StrictMode double-mount, dep change) must not block a retry.
+      if (!finished) lastRun.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src, inView, reduced, cols, duration, replayKey]);
+  }, [src, inView, immediate, reduced, cols, duration, replayKey]);
 
   return (
     <div

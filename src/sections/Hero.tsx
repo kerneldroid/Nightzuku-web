@@ -122,6 +122,7 @@ export function Hero() {
                 className="block aspect-[704/1568] w-full"
                 cols={52}
                 duration={1500}
+                immediate
               />
             </motion.div>
           </motion.div>
