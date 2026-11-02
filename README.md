@@ -1,5 +1,7 @@
 # Nightzuku Web
 
+[![Deploy](https://github.com/kerneldroid/Nightzuku-web/actions/workflows/deploy.yml/badge.svg)](https://github.com/kerneldroid/Nightzuku-web/actions/workflows/deploy.yml)
+
 Landing page for [Nightzuku](https://github.com/kerneldroid/Nightzuku) — a Shizuku fork with a dual-wire IPC protocol, ADB modules and a Material 3 Expressive UI.
 
 **Live:** https://kerneldroid.github.io/nightzuku/
