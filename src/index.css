@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/*
+ * These are fallbacks only. At runtime MaterialColorUtilities derives a dark
+ * "expressive" scheme from the screenshot in the gallery and overwrites every
+ * token below on :root. See src/theme/theme.ts.
+ */
+@theme {
+  --color-bg: #000000;
+  --color-surface: #0e0e10;
+  --color-surface-2: #17181c;
+  --color-surface-3: #22242a;
+  --color-outline: #2c2e35;
+  --color-on: #e6e7ec;
+  --color-muted: #8d9099;
+  --color-primary: #b4c5f8;
+  --color-primary-strong: #d9e1ff;
+  --color-on-primary: #0f1a3a;
+  --color-primary-container: #2b3a66;
+  --color-nothing: #d71921;
+
+  --font-sans: "Google Sans Flex", "Roboto Flex", system-ui, sans-serif;
+  --font-dot: "Doto", "Space Mono", monospace;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-duration: 520ms;
+    transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+}
+
+html {
+  background: #000;
+  color: var(--color-on);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  min-width: 0;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.dot-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1.2px);
+  background-size: 14px 14px;
+}
+
+.dot-grid-fade {
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.blink {
+  animation: blink 1.1s steps(1) infinite;
+}
+
+/* ---------------------------------------------------------- b-variant motion */
+
+@keyframes nz-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.nz-marquee {
+  animation: nz-marquee 46s linear infinite;
+}
+.nz-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes nz-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+}
+.nz-pulse {
+  animation: nz-pulse 2.4s cubic-bezier(0.2, 0, 0, 1) infinite;
+}
+
+@keyframes nz-scan {
+  0% {
+    transform: translateY(-12vh);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.55;
+  }
+  88% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(112vh);
+    opacity: 0;
+  }
+}
+.nz-scan {
+  animation: nz-scan 11s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .blink,
+  .nz-pulse,
+  .nz-scan,
+  .nz-marquee {
+    animation: none;
+  }
+}
