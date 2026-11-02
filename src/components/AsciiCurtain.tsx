@@ -23,7 +23,7 @@ export const AsciiCurtain = forwardRef<CurtainHandle, Props>(function AsciiCurta
   ref,
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const grid = useRef({ cols: 0, rows: 0, seeds: new Float32Array(0) });
+  const grid = useRef({ cols: 0, rows: 0, cell: CELL, seeds: new Float32Array(0) });
   const state = useRef<{ covered: boolean; busy: boolean }>({ covered: startCovered, busy: false });
   const reduced = useRef(false);
 
@@ -47,11 +47,13 @@ export const AsciiCurtain = forwardRef<CurtainHandle, Props>(function AsciiCurta
     c.height = Math.max(1, Math.round(r.height * dpr));
     const ctx = c.getContext("2d")!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const cols = Math.ceil(r.width / CELL);
-    const rows = Math.ceil(r.height / CELL);
+    // Bigger cells on phones: ~45% fewer glyphs for the same intro.
+    const cell = r.width < 640 ? 16 : CELL;
+    const cols = Math.ceil(r.width / cell);
+    const rows = Math.ceil(r.height / cell);
     const seeds = new Float32Array(cols * rows);
     for (let i = 0; i < seeds.length; i++) seeds[i] = Math.random();
-    grid.current = { cols, rows, seeds };
+    grid.current = { cols, rows, cell, seeds };
     if (!state.current.busy) paintStatic();
   }, [paintStatic]);
 
@@ -76,16 +78,23 @@ export const AsciiCurtain = forwardRef<CurtainHandle, Props>(function AsciiCurta
         const ctx = c.getContext("2d")!;
         state.current.busy = true;
         const t0 = performance.now();
+        const frameMs = 1000 / 40;
+        let last = 0;
         const frame = (now: number) => {
+          if (now - last < frameMs) {
+            requestAnimationFrame(frame);
+            return;
+          }
+          last = now;
           const p = Math.min(1, (now - t0) / duration);
-          const { cols, rows, seeds } = grid.current;
+          const { cols, rows, cell, seeds } = grid.current;
           const w = c.width;
           const h = c.height;
           ctx.save();
           ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.clearRect(0, 0, w, h);
           ctx.restore();
-          ctx.font = `700 ${CELL - 1}px "Space Mono", monospace`;
+          ctx.font = `700 ${cell - 1}px "Space Mono", monospace`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           const diag = cols + rows;
@@ -95,19 +104,19 @@ export const AsciiCurtain = forwardRef<CurtainHandle, Props>(function AsciiCurta
               const t = ((x + y) / diag) * 0.72 + s * 0.28;
               const l = Math.max(0, Math.min(1, (p * 1.45 - t) / 0.45));
               const coveredCell = mode === "in" ? l < 0.5 : l >= 0.5;
-              const px = x * CELL;
-              const py = y * CELL;
+              const px = x * cell;
+              const py = y * cell;
               const k = l > 0 && l < 1 ? Math.sin(l * Math.PI) : 0;
               if (coveredCell || k > 0.15) {
                 ctx.fillStyle = cover;
                 ctx.globalAlpha = coveredCell ? 1 : k * 0.85;
-                ctx.fillRect(px, py, CELL, CELL);
+                ctx.fillRect(px, py, cell, cell);
               }
               if (k > 0.05) {
                 const ch = RAMP[Math.min(RAMP.length - 1, Math.round(k * (RAMP.length - 1)))];
                 ctx.globalAlpha = 0.35 + k * 0.65;
                 ctx.fillStyle = s > 0.985 ? "#d71921" : ink;
-                ctx.fillText(ch, px + CELL / 2, py + CELL / 2 + 1);
+                ctx.fillText(ch, px + cell / 2, py + cell / 2 + 1);
               }
             }
           }

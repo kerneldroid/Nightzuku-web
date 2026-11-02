@@ -19,7 +19,7 @@
   --color-primary-container: #2b3a66;
   --color-nothing: #d71921;
 
-  --font-sans: "Google Sans Flex", "Roboto Flex", system-ui, sans-serif;
+  --font-sans: "Google Sans Flex", system-ui, sans-serif;
   --font-dot: "Doto", "Space Mono", monospace;
   --font-mono: "Space Mono", ui-monospace, monospace;
 }
@@ -28,7 +28,7 @@
   *,
   *::before,
   *::after {
-    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-property: background-color, border-color, color;
     transition-duration: 520ms;
     transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
   }
@@ -100,6 +100,7 @@ body {
 }
 .nz-marquee {
   animation: nz-marquee 46s linear infinite;
+  will-change: transform;
 }
 .nz-marquee:hover {
   animation-play-state: paused;
@@ -138,6 +139,7 @@ body {
 }
 .nz-scan {
   animation: nz-scan 11s linear infinite;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {

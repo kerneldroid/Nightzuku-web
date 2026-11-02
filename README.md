@@ -25,6 +25,14 @@ There are no hard-coded accent colours at runtime. `src/theme/theme.ts`:
 
 Clicking another screenshot — or switching Phone / Wear OS / Android TV — re-derives the palette. The values in `src/index.css` are fallbacks only, used until the first image is quantized or if it fails to load.
 
+## Performance notes
+
+- Theme quantization runs in a `requestIdleCallback`, off the first paint; the static palette is used until it lands.
+- ASCII decoding is capped at 30fps, uses precomputed per-cell noise and reuses colour strings; the canvas releases its backing store once the screenshot resolves.
+- `MorphShape` stops its spring loop when it leaves the viewport.
+- Only Doto 900 and Space Mono 400/700 are fetched; the hero screenshot is preconnected and preloaded.
+- The ambient layers avoid `filter: blur()` so scrolling stays on the compositor.
+
 ## Local development
 
 ```bash

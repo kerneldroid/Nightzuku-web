@@ -60,7 +60,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    apply(PLATFORMS[0].shots[0].src);
+    const run = () => apply(PLATFORMS[0].shots[0].src);
+    // Keep the first paint free of quantization work; the static palette shows
+    // until this runs, then the MCU palette transitions in.
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(run, { timeout: 1500 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(run, 350);
+    return () => window.clearTimeout(id);
   }, [apply]);
 
   return (

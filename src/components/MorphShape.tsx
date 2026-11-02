@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
-import { animate, useMotionValue, useMotionValueEvent } from "motion/react";
+import { animate, useInView, useMotionValue, useMotionValueEvent } from "motion/react";
 
-const N = 180;
+const N = 128;
 
 type ShapeFn = (t: number) => number;
 
@@ -42,9 +42,13 @@ export function MorphShape({
 }: Props) {
   const pathRef = useRef<SVGPathElement>(null);
   const gRef = useRef<SVGGElement>(null);
+  const hostRef = useRef<SVGSVGElement>(null);
   const radii = useRef(sequence.map((k) => sample(SHAPES[k])));
   const mv = useMotionValue(0);
   const rot = useMotionValue(0);
+  const step = useRef(0);
+  // Offscreen shapes must not keep rebuilding a 128-point path at 60fps.
+  const inView = useInView(hostRef, { margin: "25% 0px" });
 
   const draw = (v: number, r: number) => {
     const list = radii.current;
@@ -69,19 +73,23 @@ export function MorphShape({
 
   useEffect(() => {
     draw(0, 0);
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let step = 0;
-    const id = setInterval(() => {
-      step += 1;
-      animate(mv, step, { type: "spring", stiffness, damping });
-      animate(rot, step * 60, { type: "spring", stiffness: stiffness * 0.6, damping: damping * 1.2 });
-    }, interval);
-    return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!inView) return;
+    const id = setInterval(() => {
+      step.current += 1;
+      animate(mv, step.current, { type: "spring", stiffness, damping });
+      animate(rot, step.current * 60, { type: "spring", stiffness: stiffness * 0.6, damping: damping * 1.2 });
+    }, interval);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inView, interval, stiffness, damping]);
+
   return (
-    <svg viewBox="0 0 100 100" className={className} aria-hidden>
+    <svg ref={hostRef} viewBox="0 0 100 100" className={className} aria-hidden>
       <g ref={gRef}>
         <path ref={pathRef} fill={fill} />
       </g>

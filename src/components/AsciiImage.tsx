@@ -130,8 +130,8 @@ export function AsciiImage({
     const cv = canvas.current;
     if (!el || !cv) return;
 
-    Promise.all([loadImage(src), document.fonts?.ready ?? Promise.resolve()])
-      .then(([img]) => {
+    loadImage(src)
+      .then((img) => {
         if (cancelled) return;
         const W = el.clientWidth;
         const H = el.clientHeight;
@@ -164,10 +164,24 @@ export function AsciiImage({
         const grid = sample(img, nCols, nRows) ?? synthetic(nCols, nRows);
         const ink = token("--color-primary", "b4c5f8");
         const signal = token("--color-nothing", "d71921");
+        const inkCss = `rgb(${ink[0]},${ink[1]},${ink[2]})`;
+        const signalCss = `rgb(${signal[0]},${signal[1]},${signal[2]})`;
 
+        // Stable per-cell noise: no Math.random() in the hot loop.
+        const noise = new Float32Array(nCols * nRows);
+        for (let i = 0; i < noise.length; i++) noise[i] = Math.random();
+
+        // The decode is decorative: 30fps looks identical and halves fillText work.
+        const frameMs = 1000 / 30;
+        let last = 0;
         const start = performance.now();
         const draw = (now: number) => {
           if (cancelled) return;
+          if (now - last < frameMs) {
+            raf = requestAnimationFrame(draw);
+            return;
+          }
+          last = now;
           const p = Math.min(1, (now - start) / duration);
 
           ctx.clearRect(0, 0, W, H);
@@ -179,25 +193,28 @@ export function AsciiImage({
             const rowP = y / nRows;
             const local = head - rowP * 0.55;
             for (let x = 0; x < nCols; x++) {
-              const l = grid.lum[y * nCols + x];
+              const idx = y * nCols + x;
+              const l = grid.lum[idx];
+              const s = noise[idx];
               let char: string;
               let alpha: number;
               if (local > 0.5) {
                 char = RAMP[Math.min(RAMP.length - 1, (l * RAMP.length) | 0)];
                 alpha = 0.2 + l * 0.8;
               } else if (local > 0.02) {
-                char = NOISE[(Math.random() * NOISE.length) | 0];
-                alpha = 0.14 + Math.random() * 0.35;
+                char = NOISE[(s * NOISE.length) | 0];
+                alpha = 0.14 + s * 0.35;
               } else {
                 continue;
               }
               if (char === " ") continue;
               const near = Math.abs(local - 0.5) < 0.06;
-              const [r, g, b] = near ? signal : ink;
-              ctx.fillStyle = `rgba(${r},${g},${b},${near ? alpha : alpha * 0.92})`;
+              ctx.fillStyle = near ? signalCss : inkCss;
+              ctx.globalAlpha = near ? alpha : alpha * 0.92;
               ctx.fillText(char, x * cw, y * ch);
             }
           }
+          ctx.globalAlpha = 1;
 
           const fade = p < 0.68 ? 1 : 1 - (p - 0.68) / 0.32;
           cv.style.opacity = String(Math.max(0, fade));
@@ -209,6 +226,9 @@ export function AsciiImage({
           else {
             ctx.clearRect(0, 0, W, H);
             cv.style.opacity = "0";
+            // Release the large backing store; the resolved <img> is what stays.
+            cv.width = 1;
+            cv.height = 1;
             if (nextImg.current) nextImg.current.style.opacity = "1";
             setBusy(false);
             setPrevious(null);
